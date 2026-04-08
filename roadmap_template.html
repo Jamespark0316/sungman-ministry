@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4주/8주 적용 로드맵</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: #fff; padding: 32px 24px; max-width: 720px; margin: 0 auto; }
+  .page-title { font-size: 26px; font-weight: 600; margin-bottom: 6px; }
+  .page-sub { font-size: 13px; color: #6b6b6b; margin-bottom: 24px; line-height: 1.7; }
+  .divider { border: none; border-top: 1px solid #e8e8e8; margin: 20px 0; }
+  .track-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .tab { padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid #ddd; background: #fff; color: #888; transition: all .15s; }
+  .tab.active { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+  .tab:hover:not(.active) { border-color: #1D9E75; color: #1D9E75; }
+  .progress-bar-wrap { margin-bottom: 24px; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .progress-label { color: #666; }
+  .progress-pct { font-weight: 600; color: #1D9E75; }
+  .progress-bg { height: 8px; background: #f0f0f0; border-radius: 4px; }
+  .progress-fill { height: 8px; border-radius: 4px; background: #1D9E75; transition: width .4s; }
+  .week-card { border: 1px solid #e8e8e8; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  .week-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; background: #fafafa; }
+  .week-head:hover { background: #f5f5f5; }
+  .week-left { display: flex; align-items: center; gap: 10px; }
+  .week-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .week-title { font-size: 14px; font-weight: 600; }
+  .week-sub { font-size: 12px; color: #888; margin-top: 2px; }
+  .week-right { display: flex; align-items: center; gap: 10px; }
+  .week-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f0f0f0; color: #666; font-weight: 500; }
+  .week-badge.done { background: #e8f7f2; color: #0F6E56; }
+  .chevron { font-size: 12px; color: #aaa; transition: transform .2s; }
+  .chevron.open { transform: rotate(90deg); }
+  .week-body { padding: 0 16px 14px; display: none; }
+  .week-body.open { display: block; }
+  .check-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; line-height: 1.55; cursor: pointer; }
+  .check-row:last-of-type { border-bottom: none; }
+  .check-row:hover { background: #fafafa; margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 4px; }
+  .check-box { width: 17px; height: 17px; border: 1.5px solid #ccc; border-radius: 3px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .check-box.checked { background: #1D9E75; border-color: #1D9E75; }
+  .check-mark { display: none; }
+  .check-box.checked .check-mark { display: block; }
+  .check-text { flex: 1; color: #1a1a1a; }
+  .check-text.done { color: #aaa; text-decoration: line-through; }
+  .output-tag { font-size: 11px; padding: 1px 7px; border-radius: 3px; background: #e8f4fd; color: #1a6eb5; flex-shrink: 0; margin-top: 2px; font-weight: 500; }
+  .memo-box { margin-top: 10px; }
+  .memo-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .memo-input { border: 1px solid #e8e8e8; border-radius: 6px; padding: 7px 11px; font-size: 12px; width: 100%; color: #1a1a1a; background: #fafafa; outline: none; font-family: inherit; resize: none; min-height: 36px; }
+  .memo-input:focus { border-color: #1D9E75; background: #fff; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .info-card { background: #f7f7f7; border-radius: 8px; padding: 12px 14px; }
+  .info-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .info-input { border: none; background: transparent; font-size: 13px; color: #1a1a1a; width: 100%; outline: none; font-family: inherit; }
+  .goal-box { border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px 14px; margin-bottom: 20px; }
+  .goal-label { font-size: 12px; color: #888; margin-bottom: 6px; }
+  .goal-input { border: none; font-size: 13px; color: #1a1a1a; width: 100%; outline: none; font-family: inherit; background: transparent; }
+  .reset-btn { font-size: 12px; color: #888; cursor: pointer; padding: 5px 12px; border: 1px solid #ddd; border-radius: 6px; background: transparent; margin-top: 4px; font-family: inherit; }
+  .reset-btn:hover { background: #f7f7f7; }
+  .track-hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="page-title">4주 / 8주 적용 로드맵</div>
+<div class="page-sub">
+  문진표에서 뽑은 우선순위 3가지를 주간 일정으로 옮기는 도구입니다.<br>
+  트랙을 선택하고, 각 주차 산출물을 체크하면서 진행하세요.
+</div>
+
+<div class="info-grid">
+  <div class="info-card">
+    <div class="info-label">작성일</div>
+    <input class="info-input" placeholder="2025년 __월 __일">
+  </div>
+  <div class="info-card">
+    <div class="info-label">작성자 (총괄)</div>
+    <input class="info-input" placeholder="이름">
+  </div>
+  <div class="info-card">
+    <div class="info-label">우선순위 1 (바닥 공사)</div>
+    <input class="info-input" placeholder="예) 장결 기준 + 케어 루틴">
+  </div>
+  <div class="info-card">
+    <div class="info-label">우선순위 2 (팀 운영)</div>
+    <input class="info-input" placeholder="예) 역할표 + 주간 회의">
+  </div>
+  <div class="info-card" style="grid-column:1/-1;">
+    <div class="info-label">우선순위 3 (성장 포인트)</div>
+    <input class="info-input" placeholder="예) 새친구 정착 루틴">
+  </div>
+</div>
+
+<div class="goal-box">
+  <div class="goal-label">이번 로드맵 성공 기준 (측정 1~2개)</div>
+  <input class="goal-input" placeholder="예) 4주 후 장결 후보 0명 / 새친구 4주 정착률 50% 이상">
+</div>
+
+<div class="track-tabs">
+  <button class="tab active" onclick="setTrack(4)">4주 트랙</button>
+  <button class="tab" onclick="setTrack(8)">8주 트랙</button>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-info">
+    <span class="progress-label">전체 진행률</span>
+    <span class="progress-pct" id="pct-label">0%</span>
+  </div>
+  <div class="progress-bg"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+</div>
+
+<div id="weeks-container"></div>
+
+<button class="reset-btn" onclick="resetAll()">전체 초기화</button>
+
+<script>
+const data4 = [
+  {
+    week: '1주차', title: '운영의 뼈대 세우기', color: '#534AB7',
+    sub: '역할·일정·커뮤니케이션',
+    items: [
+      { text: '역할표 1장 완성 (총괄·담임·안전·공지·기록)', output: true },
+      { text: '주간 운영 일정표 1장 완성', output: true },
+      { text: '카톡 공지 템플릿 3종 완성 (학생·부모·교사)', output: true },
+      { text: '교사 회의 아젠다 고정 (30~60분)', output: true },
+      { text: '기록·회고 폼 1장 완성', output: true },
+    ]
+  },
+  {
+    week: '2주차', title: '새친구 정착 체계 세우기', color: '#0F6E56',
+    sub: '전환기 케어 — 처음 온 그날을 놓치지 않는다',
+    items: [
+      { text: '새친구 담당 1명 별도 지정', output: false },
+      { text: '첫날 동선·담당표 1장 완성', output: true },
+      { text: '정보 수집 카드/폼 완성 (연락처·가족관계·주소·사진)', output: true },
+      { text: '환영 메시지 템플릿 2종 완성 (학생·부모)', output: true },
+      { text: '4주 정착 체크리스트 + 기록 폼 완성', output: true },
+    ]
+  },
+  {
+    week: '3주차', title: '출석·심방·장결 체계 세우기', color: '#993C1D',
+    sub: '기준이 관계를 지킨다',
+    items: [
+      { text: '출석 기록표 당일 완료 루틴 고정', output: false },
+      { text: '3주 장결 기준표 고정 (후보 자동 표시)', output: true },
+      { text: '장결 후보 리스트 + 이번 주 액션 배정', output: true },
+      { text: '정성 메시지 템플릿 3종 완성 (학생·보호자·내부)', output: true },
+      { text: '연락 시도 로그 폼 완성', output: true },
+    ]
+  },
+  {
+    week: '4주차', title: '회고 + 개선 루프 만들기', color: '#854F0B',
+    sub: '홍보·콘텐츠·동원 구조 정리',
+    items: [
+      { text: '주간 30분 회고 템플릿 고정', output: true },
+      { text: '월례회 아젠다 고정 (월말/월초)', output: true },
+      { text: '상시 초대 문화 체크리스트 실행 시작', output: false },
+      { text: '컴앤씨 연간 캘린더 확정', output: false },
+      { text: '다음 분기 우선순위 3가지 재선정', output: false },
+    ]
+  }
+];
+
+const data8 = [
+  {
+    week: '1–2주차', title: '운영 뼈대 + 팀 역할 고정', color: '#534AB7',
+    sub: '역할·일정·소통 채널 확정',
+    items: [
+      { text: '역할표 1장 완성 (총괄·담임·안전·공지·기록)', output: true },
+      { text: '주간 운영 일정표 1장 완성', output: true },
+      { text: '카톡 공지 템플릿 3종 완성 (학생·부모·교사)', output: true },
+      { text: '교사 회의 아젠다 고정', output: true },
+      { text: '기록·회고 폼 1장 완성', output: true },
+    ]
+  },
+  {
+    week: '3–4주차', title: '새내기/반 운영 안정화 + 교사 협업 루틴', color: '#0F6E56',
+    sub: '새친구 정착 + 반 모임 구조 고정',
+    items: [
+      { text: '새친구 담당 지정 + 첫날 동선 완성', output: true },
+      { text: '4주 정착 체크리스트 완성', output: true },
+      { text: '반 편성 원칙 합의 (최소 1학기 고정)', output: false },
+      { text: '담임 배치 + 반 모임 20분 구조 고정', output: false },
+      { text: '구글시트 기록 컬럼 확정', output: true },
+    ]
+  },
+  {
+    week: '5–6주차', title: '말씀·공과 표준화 + 출석·심방 고도화', color: '#185FA5',
+    sub: '소그룹 질문 3 + 적용 1 고정',
+    items: [
+      { text: '예배 후 퀴즈 5~7분 운영 고정', output: false },
+      { text: '반별 모임 20분 구조 고정 (질문 3 + 적용 1)', output: true },
+      { text: '3주 장결 기준 고정 + 후보 자동 표시', output: true },
+      { text: '정성 메시지 템플릿 완성', output: true },
+      { text: '월례회 아젠다 고정', output: true },
+    ]
+  },
+  {
+    week: '7주차', title: '메인 행사 실행', color: '#993C1D',
+    sub: '동계수련회 / 컴앤씨 / 새내기 여행 등',
+    items: [
+      { text: 'Part 4 해당 템플릿 체크리스트 전항목 완료', output: false },
+      { text: '역할표 최종 확정 + 리허설 1회', output: false },
+      { text: '안전·동의·비상연락망 최종 점검', output: false },
+      { text: '카페 포스팅 담당 지정 + 업로드 기준 합의', output: false },
+      { text: '행사 당일 체크리스트 현장 실행', output: false },
+    ]
+  },
+  {
+    week: '8주차', title: '측정·회고·개선 반영', color: '#3B6D11',
+    sub: '다음 분기 계획 확정',
+    items: [
+      { text: '행사 후 24시간 내 회고 1장 기록', output: true },
+      { text: '출석·새친구·장결 데이터 확인', output: false },
+      { text: '잘 된 것 2개 / 아쉬운 것 2개 기록', output: false },
+      { text: '다음 분기 우선순위 3가지 재선정', output: false },
+      { text: '개선 반영 사항 템플릿에 업데이트', output: true },
+    ]
+  }
+];
+
+let currentTrack = 4;
+const state = {};
+
+function setTrack(n) {
+  currentTrack = n;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&n===4)||(i===1&&n===8)));
+  render();
+}
+
+function getKey(wi, ci) { return currentTrack + '_' + wi + '_' + ci; }
+
+function render() {
+  const data = currentTrack === 4 ? data4 : data8;
+  const container = document.getElementById('weeks-container');
+  container.innerHTML = '';
+  let total = 0, checked = 0;
+  data.forEach((week, wi) => {
+    week.items.forEach((_, ci) => {
+      total++;
+      if (state[getKey(wi, ci)]) checked++;
+    });
+  });
+  const pct = total ? Math.round(checked / total * 100) : 0;
+  document.getElementById('pct-label').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  data.forEach((week, wi) => {
+    const wChecked = week.items.filter((_, ci) => state[getKey(wi, ci)]).length;
+    const isOpen = week._open || false;
+    const card = document.createElement('div');
+    card.className = 'week-card';
+    card.innerHTML = `
+      <div class="week-head" onclick="toggleWeek(${wi})">
+        <div class="week-left">
+          <div class="week-dot" style="background:${week.color}"></div>
+          <div>
+            <div class="week-title">${week.week} — ${week.title}</div>
+            <div class="week-sub">${week.sub}</div>
+          </div>
+        </div>
+        <div class="week-right">
+          <span class="week-badge ${wChecked === week.items.length ? 'done' : ''}">${wChecked} / ${week.items.length}</span>
+          <span class="chevron ${isOpen ? 'open' : ''}">▶</span>
+        </div>
+      </div>
+      <div class="week-body ${isOpen ? 'open' : ''}">
+        ${week.items.map((item, ci) => `
+          <div class="check-row" onclick="toggleItem(${wi},${ci})">
+            <div class="check-box ${state[getKey(wi,ci)] ? 'checked' : ''}">
+              <svg class="check-mark" width="11" height="11" viewBox="0 0 10 10" fill="none">
+                <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="check-text ${state[getKey(wi,ci)] ? 'done' : ''}">${item.text}</span>
+            ${item.output ? '<span class="output-tag">산출물</span>' : ''}
+          </div>
+        `).join('')}
+        <div class="memo-box">
+          <div class="memo-label">이번 주 메모 / 결정 사항</div>
+          <textarea class="memo-input" placeholder="이번 주 결정 3가지, 담당, 기한을 적어두세요." rows="2" onclick="event.stopPropagation()"></textarea>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  (currentTrack === 4 ? data4 : data8).forEach((w, i) => {
+    const heads = container.querySelectorAll('.week-head');
+    if (heads[i]) heads[i]._wi = i;
+  });
+}
+
+function toggleWeek(wi) {
+  const data = currentTrack === 4 ? data4 : data8;
+  data[wi]._open = !data[wi]._open;
+  render();
+}
+
+function toggleItem(wi, ci) {
+  const k = getKey(wi, ci);
+  state[k] = !state[k];
+  render();
+}
+
+function resetAll() {
+  Object.keys(state).forEach(k => delete state[k]);
+  (currentTrack === 4 ? data4 : data8).forEach(w => w._open = false);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

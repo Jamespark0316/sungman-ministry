@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사역 문진표 (진단지)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: #fff; padding: 32px 24px; max-width: 720px; margin: 0 auto; }
+  .page-title { font-size: 26px; font-weight: 600; margin-bottom: 6px; }
+  .page-sub { font-size: 13px; color: #6b6b6b; margin-bottom: 28px; line-height: 1.7; }
+  .prop-label { color: #6b6b6b; }
+  .divider { border: none; border-top: 1px solid #e8e8e8; margin: 24px 0; }
+  .section-card { border: 1px solid #e8e8e8; border-radius: 10px; padding: 16px 18px; margin-bottom: 14px; background: #fff; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .section-badge { font-size: 11px; padding: 2px 9px; border-radius: 4px; font-weight: 500; background: #f0f0f0; color: #555; }
+  .check-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; line-height: 1.55; cursor: pointer; }
+  .check-row:last-of-type { border-bottom: none; }
+  .check-row:hover { background: #fafafa; margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 4px; }
+  .check-box { width: 17px; height: 17px; border: 1.5px solid #ccc; border-radius: 3px; flex-shrink: 0; margin-top: 1px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s, border-color .15s; }
+  .check-box.checked { background: #1D9E75; border-color: #1D9E75; }
+  .check-mark { display: none; }
+  .check-box.checked .check-mark { display: block; }
+  .check-text { color: #1a1a1a; flex: 1; }
+  .check-text.done { color: #aaa; text-decoration: line-through; }
+  .risk-tag { font-size: 11px; padding: 1px 7px; border-radius: 3px; background: #fff0f0; color: #c0392b; flex-shrink: 0; margin-top: 2px; font-weight: 500; }
+  .score-bar-wrap { margin-top: 12px; }
+  .score-bar-bg { height: 5px; background: #f0f0f0; border-radius: 3px; margin-top: 5px; }
+  .score-bar-fill { height: 5px; border-radius: 3px; transition: width .4s; }
+  .score-label { font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+  .total-score { display: flex; align-items: center; gap: 20px; padding: 16px 18px; background: #f7f7f7; border-radius: 10px; margin-bottom: 20px; }
+  .total-num { font-size: 36px; font-weight: 600; line-height: 1; }
+  .total-denom { font-size: 15px; color: #888; }
+  .total-label { font-size: 12px; color: #888; margin-top: 3px; }
+  .grade-wrap { flex: 1; }
+  .grade-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .grade-desc { font-size: 12px; color: #666; margin-top: 6px; line-height: 1.5; }
+  .priority-section { margin-top: 8px; }
+  .priority-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 13px; }
+  .priority-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 20px; }
+  .p1 { background: #fff0f0; color: #c0392b; }
+  .p2 { background: #fff8e1; color: #b7770d; }
+  .p3 { background: #e8f4fd; color: #1a6eb5; }
+  .input-wrap { flex: 1; }
+  .input-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .input-field { border: 1px solid #ddd; border-radius: 6px; padding: 7px 11px; font-size: 13px; width: 100%; color: #1a1a1a; background: #fff; outline: none; font-family: inherit; }
+  .input-field:focus { border-color: #1D9E75; }
+  .select-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .select-label { font-size: 13px; color: #666; white-space: nowrap; }
+  .track-select { border: 1px solid #ddd; border-radius: 6px; padding: 7px 11px; font-size: 13px; color: #1a1a1a; background: #fff; font-family: inherit; outline: none; }
+  .track-select:focus { border-color: #1D9E75; }
+  .reset-btn { font-size: 12px; color: #888; cursor: pointer; padding: 5px 12px; border: 1px solid #ddd; border-radius: 6px; background: transparent; margin-top: 16px; font-family: inherit; }
+  .reset-btn:hover { background: #f7f7f7; }
+  h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">사역 문진표 (진단지)</div>
+<div class="page-sub">
+  작성자: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 작성일: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | 소요시간: 25분(혼자) / 40분(2인)<br>
+  목적: 이번 분기 우선순위 3가지를 뽑아 로드맵과 연결한다. 평가가 아니라 출발점 찾기다.
+</div>
+
+<div class="total-score">
+  <div>
+    <div style="display:flex;align-items:baseline;gap:4px;">
+      <span class="total-num" id="total-score">0</span>
+      <span class="total-denom">/ 28</span>
+    </div>
+    <div class="total-label">현재 체크 수</div>
+  </div>
+  <div class="grade-wrap">
+    <div class="grade-name" id="grade-label" style="color:#E24B4A;">기초 공사 단계</div>
+    <div class="score-label"><span id="grade-pct">0%</span></div>
+    <div class="score-bar-bg"><div class="score-bar-fill" id="total-bar" style="width:0%;background:#E24B4A;"></div></div>
+    <div class="grade-desc" id="grade-desc">총괄 역할·출석 기록·공지 채널, 이 세 가지부터 고정하세요.</div>
+  </div>
+</div>
+
+<div id="sections"></div>
+
+<hr class="divider">
+
+<h3>우선순위 확정 (이번 분기)</h3>
+<div class="priority-section">
+  <div class="priority-row">
+    <div class="priority-num p1">1</div>
+    <div class="input-wrap">
+      <div class="input-label">바닥 공사 (안전·출석·장결 중)</div>
+      <input class="input-field" placeholder="예) 장결 기준 3주 룰 + 케어 루틴 고정">
+    </div>
+  </div>
+  <div class="priority-row">
+    <div class="priority-num p2">2</div>
+    <div class="input-wrap">
+      <div class="input-label">팀 운영 (역할·공지·회의 중)</div>
+      <input class="input-field" placeholder="예) 역할표 1장 + 주간 회의 아젠다 고정">
+    </div>
+  </div>
+  <div class="priority-row">
+    <div class="priority-num p3">3</div>
+    <div class="input-wrap">
+      <div class="input-label">성장 포인트 (새친구·소그룹 중)</div>
+      <input class="input-field" placeholder="예) 새친구 첫날 동선 + 4주 정착 체크리스트">
+    </div>
+  </div>
+</div>
+
+<div class="select-row">
+  <span class="select-label">적용 트랙</span>
+  <select class="track-select">
+    <option>4주 트랙 (큰 행사 없음)</option>
+    <option>8주 트랙 (수련회·컴앤씨 등 있음)</option>
+  </select>
+  <span class="select-label">첫 적용 챕터</span>
+  <select class="track-select">
+    <option>Part 2 — 1주차 (역할·일정)</option>
+    <option>Part 2 — 2주차 (새친구 정착)</option>
+    <option>Part 2 — 3주차 (출석·장결)</option>
+    <option>Part 3 — 운영 표준</option>
+    <option>Part 4 — 행사 템플릿</option>
+  </select>
+</div>
+
+<div style="margin-top:14px;">
+  <div class="input-label" style="font-size:13px;color:#666;margin-bottom:4px;">성공 기준 (측정 1~2개)</div>
+  <input class="input-field" placeholder="예) 4주 후 장결 후보 0명 / 새친구 4주 정착률 50% 이상">
+</div>
+
+<button class="reset-btn" onclick="resetAll()">전체 초기화</button>
+
+<script>
+const sections = [
+  {
+    id:'A', title:'A. 목회 방향·기대 정렬', color:'#534AB7',
+    items:[
+      {text:'담임목회자(또는 교역자)의 목회 방향을 중고등부에서 정확히 이해하고 있다', risk:true},
+      {text:'올해(이번 학기) 중고등부에 기대하는 변화가 구체적으로 정리되어 있다', risk:false},
+      {text:'예배·양육·전도의 우선순위가 내부에서 합의되어 있다', risk:false},
+      {text:'규정(안전·동의·개인정보·촬영)이 문서로 있고 교사들이 알고 있다', risk:true},
+    ]
+  },
+  {
+    id:'B', title:'B. 학생 구성·유입·장결 패턴', color:'#0F6E56',
+    items:[
+      {text:'평균 출석(최근 4주) 숫자가 교사 팀 내에서 공유된다', risk:true},
+      {text:'중1 새내기의 유입 경로(부모·친구·학교·지역)가 파악되어 있다', risk:false},
+      {text:'장결 기준(3주 연속 미출석 등)이 팀 내에서 합의되어 있다', risk:true},
+      {text:'장결자 케어(연락·방문·부모 소통) 담당과 루틴이 있다', risk:false},
+      {text:'학년별·성별 구성(대략)과 리스크가 팀 내에서 공유된다', risk:false},
+    ]
+  },
+  {
+    id:'C', title:'C. 교사·인력·리더십 구조', color:'#993C1D',
+    items:[
+      {text:'총괄(혹은 팀장)이 명확하고 결정을 내릴 수 있다', risk:true},
+      {text:'교사 역할이 문서로 정의되어 있다 (담임·안전·행정·기록·차량 등)', risk:true},
+      {text:'신입 교사가 적응하도록 돕는 온보딩 방식이 있다', risk:false},
+      {text:'교사 회의 주기와 아젠다가 고정되어 있다', risk:false},
+      {text:'교사들의 가능 시간이 공유되고 무리한 배치가 없다', risk:false},
+    ]
+  },
+  {
+    id:'D', title:'D. 운영 루틴·커뮤니케이션', color:'#854F0B',
+    items:[
+      {text:'주간 운영 흐름(예배 전·예배·소그룹·사후)이 표준 순서로 존재한다', risk:false},
+      {text:'연락 채널(카톡 등)과 공지 책임자가 정해져 있다', risk:true},
+      {text:'부모 안내(공지·동의·안전) 템플릿이 있다', risk:false},
+      {text:'행사 준비 체크리스트(기본형)가 있고 매번 재사용한다', risk:false},
+      {text:'기록(사진·후기·출석·이슈)이 남고 다음 실행에 반영된다', risk:false},
+    ]
+  },
+  {
+    id:'E', title:'E. 자원·환경 (예산·공간·차량)', color:'#185FA5',
+    items:[
+      {text:'사용 가능한 예산 범위와 결재·정산 방식이 합의되어 있다', risk:false},
+      {text:'사용 가능한 공간(예배실·소그룹실·야외) 제약이 정리되어 있다', risk:false},
+      {text:'차량 운행 원칙(안전·보험·동의·운전자)이 문서로 있다', risk:true},
+      {text:'외부 장소 사용 시(수련회·여행) 계약·안전 기준이 정리되어 있다', risk:false},
+    ]
+  },
+  {
+    id:'F', title:'F. 말씀·공과·홍보·콘텐츠', color:'#3B6D11',
+    items:[
+      {text:'공과(설교) 운영 흐름이 표준화되어 있다 (도입–말씀–나눔–적용)', risk:false},
+      {text:'소그룹 리더(담임)가 질문 3개 + 적용 1개 수준으로 진행할 수 있다', risk:false},
+      {text:'새친구가 와도 어색하지 않게 맞이하는 정착 루틴(첫날·첫달)이 있다', risk:true},
+      {text:'홍보(초대·공지) 방식이 정해져 있다', risk:false},
+      {text:'개인정보·초상권·실명 노출 기준이 정해져 있다', risk:false},
+    ]
+  }
+];
+
+const grades = [
+  {min:0,  max:10, label:'기초 공사 단계', color:'#E24B4A', desc:'총괄 역할·출석 기록·공지 채널, 이 세 가지부터 고정하세요.'},
+  {min:11, max:19, label:'뼈대 세우기 단계', color:'#BA7517', desc:'머릿속에 있는 것을 문서 한 장으로 꺼내는 것이 지금 가장 필요합니다.'},
+  {min:20, max:24, label:'표준화 단계', color:'#378ADD', desc:'이번 분기 한 가지를 더 고도화하세요. 미체크 섹션 중 가장 큰 구멍부터.'},
+  {min:25, max:28, label:'확장 단계', color:'#1D9E75', desc:'문서는 있는데 실제로 굴러가고 있는지 점검할 때입니다. Part 5 변형 가이드를 참고하세요.'},
+];
+
+const state = {};
+sections.forEach(s => s.items.forEach((_,i) => { state[s.id+i] = false; }));
+
+function render() {
+  const container = document.getElementById('sections');
+  container.innerHTML = '';
+  sections.forEach(sec => {
+    const checked = sec.items.filter((_,i) => state[sec.id+i]).length;
+    const barPct = Math.round(checked / sec.items.length * 100);
+    const card = document.createElement('div');
+    card.className = 'section-card';
+    card.innerHTML = `
+      <div class="section-head">
+        <div class="section-title">
+          <span style="width:9px;height:9px;border-radius:50%;background:${sec.color};display:inline-block;flex-shrink:0;"></span>
+          ${sec.title}
+        </div>
+        <span class="section-badge">${checked} / ${sec.items.length}</span>
+      </div>
+      ${sec.items.map((item,i) => `
+        <div class="check-row" onclick="toggle('${sec.id}',${i})">
+          <div class="check-box ${state[sec.id+i]?'checked':''}" id="cb-${sec.id}-${i}">
+            <svg class="check-mark" width="11" height="11" viewBox="0 0 10 10" fill="none">
+              <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <span class="check-text ${state[sec.id+i]?'done':''}">${item.text}</span>
+          ${item.risk && !state[sec.id+i] ? '<span class="risk-tag">핵심</span>' : ''}
+        </div>
+      `).join('')}
+      <div class="score-bar-wrap">
+        <div class="score-label"><span>섹션 달성률</span><span>${barPct}%</span></div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${barPct}%;background:${sec.color};"></div></div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+  updateTotal();
+}
+
+function toggle(secId, idx) {
+  state[secId+idx] = !state[secId+idx];
+  render();
+}
+
+function updateTotal() {
+  const total = Object.values(state).filter(Boolean).length;
+  document.getElementById('total-score').textContent = total;
+  const pct = Math.round(total / 28 * 100);
+  document.getElementById('total-bar').style.width = pct + '%';
+  document.getElementById('grade-pct').textContent = pct + '%';
+  const grade = grades.find(g => total >= g.min && total <= g.max) || grades[0];
+  document.getElementById('grade-label').textContent = grade.label;
+  document.getElementById('grade-label').style.color = grade.color;
+  document.getElementById('total-bar').style.background = grade.color;
+  document.getElementById('grade-desc').textContent = grade.desc;
+}
+
+function resetAll() {
+  Object.keys(state).forEach(k => state[k] = false);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
