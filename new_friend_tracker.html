@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>새친구 정착 트래커</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: #f5f5f3; min-height: 100vh; }
+  .header { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 20px 24px; }
+  .header-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .header-sub { font-size: 13px; color: #888; }
+  .toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 24px; background: #fff; border-bottom: 1px solid #e8e8e8; flex-wrap: wrap; }
+  .btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #ddd; background: #fff; color: #1a1a1a; font-family: inherit; transition: all .15s; }
+  .btn:hover { background: #f5f5f3; }
+  .btn-primary { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+  .btn-primary:hover { background: #0F6E56; }
+  .filter-select { padding: 7px 11px; border-radius: 6px; font-size: 13px; border: 1px solid #ddd; background: #fff; color: #1a1a1a; font-family: inherit; outline: none; }
+  .summary-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 16px 24px; background: #fff; border-bottom: 1px solid #e8e8e8; }
+  .summary-card { background: #f7f7f5; border-radius: 8px; padding: 12px 14px; }
+  .summary-num { font-size: 24px; font-weight: 600; }
+  .summary-label { font-size: 11px; color: #888; margin-top: 2px; }
+  .main { padding: 20px 24px; }
+  .friend-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  .friend-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; }
+  .friend-head:hover { background: #fafafa; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; color: #fff; }
+  .friend-info { flex: 1; }
+  .friend-name { font-size: 14px; font-weight: 600; }
+  .friend-meta { font-size: 12px; color: #888; margin-top: 2px; }
+  .stage-badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; flex-shrink: 0; }
+  .stage-1 { background: #e8f4fd; color: #1a6eb5; }
+  .stage-2 { background: #fff8e1; color: #b7770d; }
+  .stage-3 { background: #f3e8fd; color: #6b3fa0; }
+  .stage-4 { background: #e8f7f2; color: #0F6E56; }
+  .stage-drop { background: #fff0f0; color: #c0392b; }
+  .chevron { font-size: 11px; color: #ccc; transition: transform .2s; }
+  .chevron.open { transform: rotate(90deg); }
+  .friend-body { display: none; padding: 0 16px 16px; border-top: 1px solid #f0f0f0; }
+  .friend-body.open { display: block; }
+  .week-track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+  .week-box { border: 1px solid #e8e8e8; border-radius: 8px; padding: 10px 12px; }
+  .week-label { font-size: 11px; color: #888; margin-bottom: 8px; font-weight: 500; }
+  .week-checks { display: flex; flex-direction: column; gap: 5px; }
+  .mini-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #444; cursor: pointer; }
+  .mini-check:hover { color: #1D9E75; }
+  .mini-box { width: 14px; height: 14px; border: 1.5px solid #ccc; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .mini-box.checked { background: #1D9E75; border-color: #1D9E75; }
+  .week-box.complete { border-color: #1D9E75; background: #f0faf5; }
+  .week-box.complete .week-label { color: #0F6E56; }
+  .field-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .field { flex: 1; min-width: 140px; }
+  .field-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+  .field-input { border: 1px solid #e8e8e8; border-radius: 6px; padding: 6px 10px; font-size: 13px; width: 100%; color: #1a1a1a; background: #fafafa; outline: none; font-family: inherit; }
+  .field-input:focus { border-color: #1D9E75; background: #fff; }
+  .memo-area { width: 100%; border: 1px solid #e8e8e8; border-radius: 6px; padding: 8px 10px; font-size: 12px; color: #1a1a1a; background: #fafafa; outline: none; font-family: inherit; resize: none; min-height: 50px; }
+  .memo-area:focus { border-color: #1D9E75; background: #fff; }
+  .action-row { display: flex; gap: 8px; margin-top: 12px; }
+  .action-btn { font-size: 12px; padding: 5px 10px; border-radius: 5px; border: 1px solid #ddd; background: #fff; color: #666; cursor: pointer; font-family: inherit; }
+  .action-btn:hover { background: #f5f5f3; }
+  .action-btn.danger { color: #c0392b; border-color: #f5c0c0; }
+  .action-btn.danger:hover { background: #fff0f0; }
+  .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: #fff; border-radius: 12px; padding: 24px; width: 90%; max-width: 460px; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .modal-field { margin-bottom: 12px; }
+  .modal-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .modal-input { border: 1px solid #e8e8e8; border-radius: 6px; padding: 8px 11px; font-size: 13px; width: 100%; color: #1a1a1a; outline: none; font-family: inherit; }
+  .modal-input:focus { border-color: #1D9E75; }
+  .modal-select { border: 1px solid #e8e8e8; border-radius: 6px; padding: 8px 11px; font-size: 13px; width: 100%; color: #1a1a1a; outline: none; font-family: inherit; background: #fff; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #aaa; }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">새친구 정착 트래커</div>
+  <div class="header-sub">첫날부터 4주까지 — 한 명도 놓치지 않는다</div>
+</div>
+
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="openModal()">+ 새친구 추가</button>
+  <select class="filter-select" id="filter-stage" onchange="renderList()">
+    <option value="all">전체 보기</option>
+    <option value="1">1주차</option>
+    <option value="2">2주차</option>
+    <option value="3">3주차</option>
+    <option value="4">4주차 (정착)</option>
+    <option value="drop">관리 필요</option>
+  </select>
+  <select class="filter-select" id="filter-teacher" onchange="renderList()">
+    <option value="all">담당 전체</option>
+  </select>
+</div>
+
+<div class="summary-bar">
+  <div class="summary-card">
+    <div class="summary-num" id="sum-total">0</div>
+    <div class="summary-label">전체 새친구</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-num" id="sum-inprog" style="color:#1a6eb5">0</div>
+    <div class="summary-label">진행 중 (1~3주)</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-num" id="sum-settled" style="color:#0F6E56">0</div>
+    <div class="summary-label">정착 완료 (4주)</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-num" id="sum-drop" style="color:#c0392b">0</div>
+    <div class="summary-label">관리 필요</div>
+  </div>
+</div>
+
+<div class="main" id="list-container"></div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title">새친구 등록</div>
+    <div class="modal-field">
+      <div class="modal-label">이름 *</div>
+      <input class="modal-input" id="m-name" placeholder="학생 이름">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="modal-field">
+        <div class="modal-label">학교</div>
+        <input class="modal-input" id="m-school" placeholder="○○중학교">
+      </div>
+      <div class="modal-field">
+        <div class="modal-label">학년</div>
+        <select class="modal-select" id="m-grade">
+          <option>중1</option><option>중2</option><option>중3</option>
+          <option>고1</option><option>고2</option><option>고3</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">첫 방문일</div>
+      <input class="modal-input" id="m-date" type="date">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">담당 교사</div>
+      <input class="modal-input" id="m-teacher" placeholder="담당 선생님 이름">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">유입 경로</div>
+      <select class="modal-select" id="m-source">
+        <option>친구 초대</option><option>부모님</option><option>컴앤씨</option>
+        <option>학교</option><option>지역</option><option>기타</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" onclick="addFriend()">등록</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const colors = ['#534AB7','#0F6E56','#993C1D','#854F0B','#185FA5','#3B6D11','#6b3fa0','#1D9E75'];
+let friends = JSON.parse(localStorage.getItem('friends') || '[]');
+let openCards = {};
+
+const weekTasks = [
+  { label: '1주차 — 첫 방문', tasks: ['이름 기억 + 카톡 연결','기본 정보 확보 (연락처·가족)','환영 메시지 발송 (학생·부모)','다음 주 약속 1개 확정'] },
+  { label: '2주차 — 재방문 유도', tasks: ['주중 짧은 안부 1회','다음 주 약속 리마인드','관심사·성향 1줄 메모','소그룹 자리 안내'] },
+  { label: '3주차 — 관계 확장', tasks: ['또래 1명 연결','소그룹 자리 고정','담임 교사 인계 준비','3주차 상태 점검 (팀 공유)'] },
+  { label: '4주차 — 정착 판별', tasks: ['담임 인계 완료','출석·장결 기준 적용 시작','정착 여부 확정 기록','부모에게 감사 메시지'] },
+];
+
+function getStage(f) {
+  const checks = f.checks || {};
+  let completed = 0;
+  for (let w = 0; w < 4; w++) {
+    const allDone = weekTasks[w].tasks.every((_, ti) => checks[w + '_' + ti]);
+    if (allDone) completed++;
+    else break;
+  }
+  if (f.drop) return 'drop';
+  if (completed >= 4) return '4';
+  return String(completed + 1);
+}
+
+function stageLabel(s) {
+  if (s === 'drop') return '관리 필요';
+  return s + '주차';
+}
+
+function stageBadgeClass(s) {
+  if (s === 'drop') return 'stage-drop';
+  return 'stage-' + s;
+}
+
+function avatarColor(name) {
+  let h = 0;
+  for (let c of name) h = (h * 31 + c.charCodeAt(0)) % colors.length;
+  return colors[h];
+}
+
+function save() {
+  localStorage.setItem('friends', JSON.stringify(friends));
+}
+
+function renderSummary() {
+  const total = friends.length;
+  const settled = friends.filter(f => getStage(f) === '4').length;
+  const drop = friends.filter(f => f.drop).length;
+  const inprog = friends.filter(f => { const s = getStage(f); return !f.drop && s !== '4'; }).length;
+  document.getElementById('sum-total').textContent = total;
+  document.getElementById('sum-settled').textContent = settled;
+  document.getElementById('sum-drop').textContent = drop;
+  document.getElementById('sum-inprog').textContent = inprog;
+
+  const teacherSel = document.getElementById('filter-teacher');
+  const current = teacherSel.value;
+  const teachers = [...new Set(friends.map(f => f.teacher).filter(Boolean))];
+  teacherSel.innerHTML = '<option value="all">담당 전체</option>' +
+    teachers.map(t => `<option value="${t}" ${current===t?'selected':''}>${t}</option>`).join('');
+}
+
+function renderList() {
+  const stageF = document.getElementById('filter-stage').value;
+  const teacherF = document.getElementById('filter-teacher').value;
+  const container = document.getElementById('list-container');
+
+  let filtered = friends.filter(f => {
+    const s = getStage(f);
+    if (stageF !== 'all' && s !== stageF) return false;
+    if (teacherF !== 'all' && f.teacher !== teacherF) return false;
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">+</div><div class="empty-text">등록된 새친구가 없습니다.<br>위의 '새친구 추가' 버튼을 눌러 시작하세요.</div></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(f => {
+    const idx = friends.indexOf(f);
+    const stage = getStage(f);
+    const checks = f.checks || {};
+    const isOpen = openCards[idx] || false;
+    const initial = f.name ? f.name[0] : '?';
+
+    const weekBoxes = weekTasks.map((w, wi) => {
+      const allDone = w.tasks.every((_, ti) => checks[wi + '_' + ti]);
+      return `<div class="week-box ${allDone ? 'complete' : ''}">
+        <div class="week-label">${w.label}</div>
+        <div class="week-checks">
+          ${w.tasks.map((task, ti) => `
+            <label class="mini-check" onclick="event.stopPropagation()">
+              <div class="mini-box ${checks[wi+'_'+ti] ? 'checked' : ''}" onclick="toggleCheck(${idx},${wi},${ti})">
+                ${checks[wi+'_'+ti] ? '<svg width="9" height="9" viewBox="0 0 10 10" fill="none"><polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+              </div>
+              <span>${task}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="friend-card">
+      <div class="friend-head" onclick="toggleCard(${idx})">
+        <div class="avatar" style="background:${avatarColor(f.name)}">${initial}</div>
+        <div class="friend-info">
+          <div class="friend-name">${f.name}</div>
+          <div class="friend-meta">${f.grade || ''} ${f.school ? '· ' + f.school : ''} ${f.teacher ? '· 담당: ' + f.teacher : ''} ${f.visitDate ? '· 방문: ' + f.visitDate : ''}</div>
+        </div>
+        <span class="stage-badge ${stageBadgeClass(stage)}">${stageLabel(stage)}</span>
+        <span class="chevron ${isOpen ? 'open' : ''}">▶</span>
+      </div>
+      <div class="friend-body ${isOpen ? 'open' : ''}">
+        <div class="week-track">${weekBoxes}</div>
+        <div class="field-row">
+          <div class="field">
+            <div class="field-label">학생 연락처</div>
+            <input class="field-input" value="${f.phone||''}" placeholder="010-0000-0000" onchange="updateField(${idx},'phone',this.value)">
+          </div>
+          <div class="field">
+            <div class="field-label">보호자 연락처</div>
+            <input class="field-input" value="${f.parentPhone||''}" placeholder="010-0000-0000" onchange="updateField(${idx},'parentPhone',this.value)">
+          </div>
+          <div class="field">
+            <div class="field-label">유입 경로</div>
+            <input class="field-input" value="${f.source||''}" placeholder="친구 초대·컴앤씨 등" onchange="updateField(${idx},'source',this.value)">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex:2;">
+            <div class="field-label">관심사·성향 메모</div>
+            <input class="field-input" value="${f.memo||''}" placeholder="예) 축구 좋아함, 조용한 편, 학교 친구와 같이 옴" onchange="updateField(${idx},'memo',this.value)">
+          </div>
+          <div class="field">
+            <div class="field-label">다음 약속</div>
+            <input class="field-input" value="${f.nextDate||''}" placeholder="날짜·시간" onchange="updateField(${idx},'nextDate',this.value)">
+          </div>
+        </div>
+        <div class="field-label" style="margin-bottom:4px;">케어 로그 (날짜·내용)</div>
+        <textarea class="memo-area" placeholder="예) 3/5 카톡 안부 발송 → 답장 없음 / 3/7 전화 시도 → 통화 완료, 다음주 오겠다고 함" onchange="updateField(${idx},'log',this.value)">${f.log||''}</textarea>
+        <div class="action-row">
+          <button class="action-btn" onclick="toggleDrop(${idx})">${f.drop ? '정상으로 변경' : '관리 필요 표시'}</button>
+          <button class="action-btn danger" onclick="deleteFriend(${idx})">삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function render() {
+  renderSummary();
+  renderList();
+}
+
+function toggleCard(idx) {
+  openCards[idx] = !openCards[idx];
+  render();
+}
+
+function toggleCheck(idx, wi, ti) {
+  if (!friends[idx].checks) friends[idx].checks = {};
+  const key = wi + '_' + ti;
+  friends[idx].checks[key] = !friends[idx].checks[key];
+  save();
+  render();
+}
+
+function updateField(idx, field, value) {
+  friends[idx][field] = value;
+  save();
+}
+
+function toggleDrop(idx) {
+  friends[idx].drop = !friends[idx].drop;
+  save();
+  render();
+}
+
+function deleteFriend(idx) {
+  if (!confirm(friends[idx].name + ' 삭제할까요?')) return;
+  friends.splice(idx, 1);
+  save();
+  render();
+}
+
+function openModal() {
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  ['m-name','m-school','m-teacher'].forEach(id => document.getElementById(id).value = '');
+}
+
+function addFriend() {
+  const name = document.getElementById('m-name').value.trim();
+  if (!name) { alert('이름을 입력해주세요.'); return; }
+  friends.push({
+    name,
+    school: document.getElementById('m-school').value.trim(),
+    grade: document.getElementById('m-grade').value,
+    visitDate: document.getElementById('m-date').value,
+    teacher: document.getElementById('m-teacher').value.trim(),
+    source: document.getElementById('m-source').value,
+    checks: {}, drop: false
+  });
+  save();
+  closeModal();
+  render();
+}
+
+document.getElementById('modal-bg').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>행사별 체크리스트</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: #f5f5f3; min-height: 100vh; }
+  .header { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 20px 24px; }
+  .header-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .header-sub { font-size: 13px; color: #888; }
+  .event-tabs { display: flex; gap: 0; padding: 0 24px; background: #fff; border-bottom: 1px solid #e8e8e8; overflow-x: auto; }
+  .event-tab { padding: 12px 16px; font-size: 13px; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #888; white-space: nowrap; transition: all .15s; }
+  .event-tab:hover { color: #1a1a1a; }
+  .event-tab.active { color: #1D9E75; border-bottom-color: #1D9E75; }
+  .main { padding: 20px 24px; max-width: 780px; }
+  .event-header { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  .event-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+  .event-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 14px; }
+  .event-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .meta-card { background: #f7f7f5; border-radius: 7px; padding: 10px 12px; }
+  .meta-label { font-size: 11px; color: #888; margin-bottom: 3px; }
+  .meta-input { border: none; background: transparent; font-size: 13px; color: #1a1a1a; width: 100%; outline: none; font-family: inherit; }
+  .progress-wrap { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 14px 20px; margin-bottom: 16px; }
+  .progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .progress-label { font-size: 13px; color: #666; }
+  .progress-pct { font-size: 16px; font-weight: 600; color: #1D9E75; }
+  .progress-bg { height: 8px; background: #f0f0f0; border-radius: 4px; }
+  .progress-fill { height: 8px; border-radius: 4px; background: #1D9E75; transition: width .4s; }
+  .phase-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  .phase-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; cursor: pointer; background: #fafafa; }
+  .phase-head:hover { background: #f5f5f3; }
+  .phase-left { display: flex; align-items: center; gap: 10px; }
+  .phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .phase-title { font-size: 14px; font-weight: 600; }
+  .phase-sub { font-size: 12px; color: #888; margin-top: 1px; }
+  .phase-right { display: flex; align-items: center; gap: 8px; }
+  .phase-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #f0f0f0; color: #666; font-weight: 500; }
+  .phase-badge.done { background: #e8f7f2; color: #0F6E56; }
+  .chevron { font-size: 11px; color: #ccc; transition: transform .2s; }
+  .chevron.open { transform: rotate(90deg); }
+  .phase-body { display: none; padding: 4px 16px 14px; }
+  .phase-body.open { display: block; }
+  .check-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; line-height: 1.55; cursor: pointer; }
+  .check-row:last-of-type { border-bottom: none; }
+  .check-row:hover { background: #fafafa; margin: 0 -4px; padding-left: 4px; padding-right: 4px; border-radius: 4px; }
+  .check-box { width: 16px; height: 16px; border: 1.5px solid #ccc; border-radius: 3px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+  .check-box.checked { background: #1D9E75; border-color: #1D9E75; }
+  .check-mark { display: none; }
+  .check-box.checked .check-mark { display: block; }
+  .check-text { flex: 1; color: #1a1a1a; }
+  .check-text.done { color: #aaa; text-decoration: line-through; }
+  .tag { font-size: 11px; padding: 1px 7px; border-radius: 3px; flex-shrink: 0; margin-top: 2px; font-weight: 500; }
+  .tag-safety { background: #fff0f0; color: #c0392b; }
+  .tag-doc { background: #e8f4fd; color: #1a6eb5; }
+  .tag-key { background: #f3e8fd; color: #6b3fa0; }
+  .memo-box { margin-top: 10px; }
+  .memo-input { width: 100%; border: 1px solid #e8e8e8; border-radius: 6px; padding: 7px 10px; font-size: 12px; color: #1a1a1a; background: #fafafa; outline: none; font-family: inherit; resize: none; min-height: 36px; }
+  .memo-input:focus { border-color: #1D9E75; background: #fff; }
+  .btn { padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #ddd; background: #fff; color: #1a1a1a; font-family: inherit; }
+  .btn:hover { background: #f5f5f3; }
+  .btn-danger { border-color: #f5c0c0; color: #c0392b; }
+  .btn-danger:hover { background: #fff0f0; }
+  .action-bar { display: flex; gap: 8px; margin-top: 8px; }
+  .review-box { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 18px 20px; margin-top: 16px; }
+  .review-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  .review-field { margin-bottom: 10px; }
+  .review-label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .review-input { width: 100%; border: 1px solid #e8e8e8; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #1a1a1a; background: #fafafa; outline: none; font-family: inherit; }
+  .review-input:focus { border-color: #1D9E75; background: #fff; }
+  .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">행사별 체크리스트 통합본</div>
+  <div class="header-sub">6개 행사 — 준비부터 회고까지 한 곳에서 관리합니다</div>
+</div>
+
+<div class="event-tabs" id="event-tabs"></div>
+<div class="main" id="main-content"></div>
+
+<script>
+const events = [
+  {
+    id: 'new',
+    name: '새내기 여행',
+    color: '#534AB7',
+    desc: '중1 전환기 1박 2일 — 낯섦을 깨고 내 자리를 만들어주는 날',
+    phases: [
+      {
+        title: '4~3주 전 — 기초 확정', color: '#534AB7',
+        items: [
+          { text: '중1 담당 교사 편성 확정', tag: 'key' },
+          { text: '아동부로부터 아이들 정보 수령 (성향·친구관계·주의사항)', tag: 'doc' },
+          { text: '장소 예약 (파주 근교 권장, 2~3곳 후보 고정)', tag: null },
+          { text: '차량 배치 확정 (교회차·운전자·좌석수)', tag: null },
+          { text: '부모방 카톡방 개설', tag: null },
+        ]
+      },
+      {
+        title: '2~1주 전 — 준비 완료', color: '#0F6E56',
+        items: [
+          { text: '부모 안내 1차 발송 (일정·목적·준비물)', tag: null },
+          { text: '동의서·개인정보·촬영 기준 확인 및 수합', tag: 'safety' },
+          { text: '탑승표 + 비상연락망 확정', tag: 'safety' },
+          { text: '숙소·식사·간식·응급키트 점검', tag: null },
+          { text: '진행 리허설 (30분: 시간표·역할·리스크)', tag: null },
+          { text: '아동부 졸업예배 담당 교사 참석 확인', tag: 'key' },
+        ]
+      },
+      {
+        title: '당일 — 1일차', color: '#993C1D',
+        items: [
+          { text: '출발 전 중고등부 예배 드리기', tag: 'key' },
+          { text: '출발 전 교회 사전 활동 (조 편성·구호·미션)', tag: null },
+          { text: '인근 시장 장보기 (11:30~12:30)', tag: null },
+          { text: '숙소 도착 즉시 오늘 활동 가이드 공유', tag: null },
+          { text: '저녁 바베큐 (장로님·안수집사님 섬김 확인)', tag: 'key' },
+          { text: '저녁 나눔 (질문 3개, 정죄 없이)', tag: null },
+          { text: '저녁 8시 전 카페 1차 포스팅 (부모 배려)', tag: 'doc' },
+          { text: '취침 전 인원 점검 + 야간 안전 담당 배치', tag: 'safety' },
+        ]
+      },
+      {
+        title: '당일 — 2일차', color: '#854F0B',
+        items: [
+          { text: '아침 식사 + 인근 관광지 자유 방문', tag: null },
+          { text: '점심 — 미션 결과 따라 메뉴 선택', tag: null },
+          { text: '귀가 전 다음 주 예배 약속 안내', tag: null },
+          { text: '교회 도착 — 마지막 한 문장 남기기', tag: null },
+          { text: '카페 2차 포스팅 (사진·후기·다음주 안내)', tag: 'doc' },
+        ]
+      },
+      {
+        title: '사후 4주 — 정착 루틴', color: '#185FA5',
+        items: [
+          { text: '1주차: 이름·사진·기본정보 확정 + 카톡 연결', tag: null },
+          { text: '2주차: 주중 안부 1회', tag: null },
+          { text: '3주차: 또래 1명 연결 + 소그룹 자리 고정', tag: null },
+          { text: '4주차: 담임 인계 완료 + 출석·장결 기준 적용 시작', tag: null },
+          { text: '부모방 감사 메시지 + 후기 공유', tag: null },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'adult',
+    name: '성인식',
+    color: '#0F6E56',
+    desc: '중3→고1 전환기 — 예배(부모 참석) + 속초 1박 2일 여행',
+    phases: [
+      {
+        title: '6~4주 전 — 기초 확정', color: '#534AB7',
+        items: [
+          { text: '성인식 예배 날짜(주일 3부) 확정', tag: 'key' },
+          { text: '속초 1박 2일 날짜 확정', tag: null },
+          { text: '총무 1명 + 예배·여행 담당 분리', tag: null },
+          { text: '장로님·안수집사님 동행 섭외 확정', tag: 'key' },
+          { text: '대상 학생 리스트 확정', tag: null },
+          { text: '부모방 개설 + 1차 안내 발송', tag: null },
+        ]
+      },
+      {
+        title: '4주 사전 프로그램', color: '#0F6E56',
+        items: [
+          { text: '1주차: 스스로에게 쓰는 편지 초안 작성', tag: 'key' },
+          { text: '2주차: 7일 감사 미션 시작 (부모에게 매일 감사 인사)', tag: null },
+          { text: '3주차: 각자의 꿈과 비전 — 3년/5년 후 나에게 편지', tag: null },
+          { text: '4주차: 성인식 마음가짐 적기 + 이스라엘 성인식 다큐 시청', tag: 'key' },
+          { text: '편지 최종본 확정 (부모·학생)', tag: 'doc' },
+        ]
+      },
+      {
+        title: '예배 준비', color: '#993C1D',
+        items: [
+          { text: '부모 편지 낭독자 선정 (추천 → 고심 → 부탁)', tag: 'key' },
+          { text: '낭독자 가이드 공유 + 부서 중보기도', tag: null },
+          { text: '예배 리허설 (동선·마이크·안수 순서)', tag: null },
+          { text: '부모 안내 2차 (좌석·꽃 준비·촬영 범위)', tag: null },
+          { text: '교회 어른 미션 준비 (미션지·공간·찬양)', tag: null },
+        ]
+      },
+      {
+        title: '당일 예배', color: '#854F0B',
+        items: [
+          { text: '부모 편지 낭독', tag: 'key' },
+          { text: '학생 편지 낭독', tag: 'key' },
+          { text: '목사님 + 부모 안수기도', tag: 'key' },
+          { text: '예배 후 교회 어른들과 사전 활동·미션', tag: null },
+          { text: '성도 용돈 인사 + 워십 (마당)', tag: null },
+        ]
+      },
+      {
+        title: '속초 1박 2일', color: '#185FA5',
+        items: [
+          { text: '고속도로 휴게소 조별 간식 타임', tag: null },
+          { text: '숙소 도착 — 아이스브레이킹 레크레이션 (20분)', tag: null },
+          { text: '조별 나눔 (질문 3개: 힘든 것·교회 느낌·두려운 것)', tag: 'key' },
+          { text: '어른 삶의 나눔 (7~10분씩: 실패·회복·이야기)', tag: 'key' },
+          { text: '아침 예배 (말씀 10분 + 적용 1문장)', tag: null },
+          { text: '학생 1인 1문장 + 어른 1문장 축복', tag: null },
+          { text: '귀가 확인 + 부모 도착 메시지', tag: 'safety' },
+          { text: '카페 후기 업로드 + 4주 후속 케어 배정', tag: 'doc' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'retreat',
+    name: '동계수련회',
+    color: '#993C1D',
+    desc: '중고등부 전체 2박 3일 — 집회 2회 / 조별 점수제 / 말씀 집중',
+    phases: [
+      {
+        title: '8주 전 — 기초 확정', color: '#534AB7',
+        items: [
+          { text: '날짜·장소 확정 및 수양관 예약 (강당 구조 확인)', tag: null },
+          { text: '수련회 주제·표어·핵심 구절 확정', tag: 'key' },
+          { text: '총무 + 실무 리더 배치 (예배·프로그램·안전·차량·식사·기록)', tag: null },
+          { text: '예산 범위 + 회계·정산 방식 확정', tag: null },
+        ]
+      },
+      {
+        title: '6~4주 전 — 구조 확정', color: '#0F6E56',
+        items: [
+          { text: '전체 시간표 큰 틀 확정 (1~3일차)', tag: 'doc' },
+          { text: '조 편성 원칙 확정 (학년 혼합·새친구 포함 방식)', tag: null },
+          { text: '점수 체계 초안 (예배태도·암송·레크·친절·방청소)', tag: null },
+          { text: '차량 배치 + 비상차량 확보', tag: 'safety' },
+          { text: '숙소 배정 (조별 방·남녀 동선) 확정', tag: 'safety' },
+          { text: '여행자 보험 준비', tag: 'safety' },
+          { text: '포스터·현수막·명찰 (뒷면: 주제말씀+일정표) 제작', tag: null },
+        ]
+      },
+      {
+        title: '4주 전 — 프로그램 확정', color: '#993C1D',
+        items: [
+          { text: '2일차 프로그램 확정 (수련회 주제 기반)', tag: 'key' },
+          { text: '집회 순서 원고 1차 (개회·집회1·집회2·폐회)', tag: 'doc' },
+          { text: '암송 구절 확정 (선택 + 랜덤 2개)', tag: null },
+          { text: '음향·찬양팀 섭외 (교사는 집회 집중)', tag: null },
+          { text: '식사·간식 메뉴 확정 + 조리 인력 점검', tag: null },
+          { text: '점수 집계 방식 확정 (오픈채팅 실시간)', tag: null },
+        ]
+      },
+      {
+        title: '1주 전 — 최종 점검', color: '#854F0B',
+        items: [
+          { text: '역할표 최종 확정', tag: 'doc' },
+          { text: '리허설 1회 (OT 흐름·점수 집계 동선)', tag: null },
+          { text: '인쇄물 완료 (일정표·명찰·조별 점수판)', tag: null },
+          { text: '보험·동의서·비상연락망·응급키트 점검', tag: 'safety' },
+          { text: '폰 운영 기준 학생·부모 공지', tag: null },
+          { text: '카페 포스팅 담당 지정 + 업로드 기준 합의 (2~3회)', tag: 'doc' },
+        ]
+      },
+      {
+        title: '수련회 진행 (2박 3일)', color: '#185FA5',
+        items: [
+          { text: '1일차: 개회예배·OT·아이스브레이킹', tag: 'key' },
+          { text: '1일차: 집회 1회차', tag: 'key' },
+          { text: '2일차: 프로그램 (조별 게임·골든벨 등)', tag: null },
+          { text: '2일차: 집회 2회차', tag: 'key' },
+          { text: '3일차: 조별 나눔 + 폐회예배', tag: 'key' },
+          { text: '귀가 이동 중 휴게소 — 점수 결과 따라 메뉴 차별화', tag: null },
+          { text: '카페 포스팅 2~3회 완료', tag: 'doc' },
+        ]
+      },
+      {
+        title: '사후 — 회고 + 팔로업', color: '#3B6D11',
+        items: [
+          { text: '24시간 내 교사 회고 1장 기록', tag: 'doc' },
+          { text: '첫 반모임에서 수련회 리뷰 (말씀 1문장+적용+약속)', tag: 'key' },
+          { text: '결단자 팔로업 배정 (4주)', tag: null },
+          { text: '교회 도착 후 어른들께 인사 문화 안내', tag: null },
+          { text: '조별 후기 카페 학생 직접 작성 독려', tag: 'doc' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'reading',
+    name: '독서마라톤',
+    color: '#854F0B',
+    desc: '아동부+중고등부 연합 / 방학 화~금 / 엉덩이 인내 프로그램',
+    phases: [
+      {
+        title: '4주 전 — 기획 확정', color: '#534AB7',
+        items: [
+          { text: '운영 기간·대상·참여 방식 확정 (온라인/오프라인)', tag: null },
+          { text: '강의 계획 + 외부활동 후보 확정 (교보문고·홍대 미션 등)', tag: null },
+          { text: '행복한 식당 점심 연계 일정 확정', tag: 'key' },
+          { text: '스페셜 데이 번개 계획 1~2회', tag: null },
+          { text: '예산 확정 (참가비 만원/주)', tag: null },
+        ]
+      },
+      {
+        title: '2~1주 전 — 준비', color: '#0F6E56',
+        items: [
+          { text: '신청·출석 기준·기록 방식 확정', tag: 'doc' },
+          { text: '공간 운영 규칙 확정 + 안내 (엉덩이 인증 룰 7개)', tag: null },
+          { text: '포스터·공지 (학생·부모) 배포', tag: null },
+          { text: '역할표 확정 (총괄·기록·콘텐츠·시상)', tag: 'doc' },
+          { text: '오리엔테이션 (주일 5~10분: 규칙·보상·주의)', tag: null },
+        ]
+      },
+      {
+        title: '운영 기간 — 주간 루틴', color: '#993C1D',
+        items: [
+          { text: '매일 10:00 출석 체크 + 오늘 목표 나눔', tag: null },
+          { text: '점심 행복한 식당 연계', tag: 'key' },
+          { text: '오후 강의 또는 독서 코칭 진행', tag: null },
+          { text: '15:30 간식 + 짧은 나눔 + 내일 예고', tag: null },
+          { text: '주간 격려 메시지 발송', tag: null },
+          { text: '스페셜 데이 번개 실행 (해당 주)', tag: null },
+        ]
+      },
+      {
+        title: '마무리 + 여행', color: '#185FA5',
+        items: [
+          { text: '참여 잘한 아이들과 1박 2일 여행 기획', tag: 'key' },
+          { text: '해외 독서마라톤 선정 기준 공지 (출석·태도·협업)', tag: null },
+          { text: '마무리 시상·간증·후기 수집', tag: null },
+          { text: '회고 문서 + 자료 정리 (내년 복제용)', tag: 'doc' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'comnsee',
+    name: '컴앤씨',
+    color: '#185FA5',
+    desc: '지역 중고등학생 전도초청잔치 — 3개월 프로젝트 + 1일 행사',
+    phases: [
+      {
+        title: '12~9주 전 — 방향 확정', color: '#534AB7',
+        items: [
+          { text: '날짜·장소·형식 확정', tag: null },
+          { text: '"왜 컴앤씨를 하는가" 한 문장 확정 + 아이들 공유', tag: 'key' },
+          { text: '총괄 + 실무 리더 배치 (프로그램·환대·홍보·안전·식음·기도·기록)', tag: null },
+          { text: '예산 범위 확정 (천만~천오백만원 수준)', tag: null },
+        ]
+      },
+      {
+        title: '8~4주 전 — 초청 분위기 조성', color: '#0F6E56',
+        items: [
+          { text: '학생 초청 카드 배포 (2주 전부터, 번호 2개 방식)', tag: 'doc' },
+          { text: '매주 소그룹에서 "초청 대상 1명" 기도·기록 루틴 시작', tag: 'key' },
+          { text: '학교 앞 전도 계획 + 안전·민원 리스크 점검', tag: 'safety' },
+          { text: '온라인 이벤트 기획', tag: null },
+          { text: '"반 전체 간식쏘기" 이벤트 설계', tag: null },
+          { text: '포스터·홍보물 제작', tag: null },
+        ]
+      },
+      {
+        title: '4~2주 전 — 당일 준비', color: '#993C1D',
+        items: [
+          { text: '마당 부스 구성 확정 (미션·인생네컷·간식)', tag: null },
+          { text: '부스를 수련회 주제와 연결 (사전 복음 경험)', tag: 'key' },
+          { text: '새친구 동선 설계 (마당→예배당→마당)', tag: null },
+          { text: '온성도 섬김 배치 확정 (환대·안내·간식·기타)', tag: 'key' },
+          { text: '보호자·학생 공지 (시간·장소·귀가·촬영 기준)', tag: 'safety' },
+          { text: '리허설 1회 (음향·동선·진행 멘트·타임키핑)', tag: null },
+        ]
+      },
+      {
+        title: '당일 운영 (90분)', color: '#854F0B',
+        items: [
+          { text: '마당 환영 (부스 오픈, 0~25분)', tag: null },
+          { text: '예배 입장 — 환영영상·환영퀴즈 (25~40분)', tag: null },
+          { text: '복음 메시지 (40~65분, 짧고 선명하게)', tag: 'key' },
+          { text: '경품 추첨 (초청카드 번호 연계)', tag: null },
+          { text: '마당 환송 — 하이파이브 (65~90분)', tag: 'key' },
+          { text: '누가 데려온 친구인지 반별 매칭 기록', tag: 'doc' },
+          { text: '24시간 내 새친구 감사 메시지 + 다음 주 약속', tag: null },
+        ]
+      },
+      {
+        title: '사후 4주 — 정착 루틴', color: '#185FA5',
+        items: [
+          { text: '1주차: 감사 메시지 + 자리 안내', tag: null },
+          { text: '2주차: 주중 안부 1회 + 또래 연결', tag: null },
+          { text: '3주차: 소그룹 참여 안내 (강요 금지)', tag: null },
+          { text: '4주차: 담임 인계 + 정착 판별', tag: null },
+          { text: '확보된 연락처 부서 차원 지속 연락 기획', tag: 'key' },
+          { text: '회고 문서 + 자료 정리 (내년 복제용)', tag: 'doc' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'trip',
+    name: '반별 여행',
+    color: '#3B6D11',
+    desc: '반 주도 자율 여행 — 작지만 깊은 하루로 관계를 진하게',
+    phases: [
+      {
+        title: '4~3주 전 — 기초 확정', color: '#534AB7',
+        items: [
+          { text: '날짜·형식 확정 (당일/1박)', tag: null },
+          { text: '반(아이들) 주도 기획서 작성 (10가지 항목)', tag: 'key' },
+          { text: '총괄·안전·공지·차량 담당 지정', tag: null },
+          { text: '장소·동선 확정 (2곳 이내)', tag: null },
+          { text: '예산 상한·하한 결정', tag: null },
+        ]
+      },
+      {
+        title: '2~1주 전 — 준비', color: '#0F6E56',
+        items: [
+          { text: '보호자 안내·동의 확보', tag: 'safety' },
+          { text: '준비물·복장 공지', tag: null },
+          { text: '역할표 고정', tag: 'doc' },
+          { text: '비상연락망·응급키트 준비', tag: 'safety' },
+          { text: '우천·변수 대안 확정', tag: null },
+        ]
+      },
+      {
+        title: '당일 운영', color: '#993C1D',
+        items: [
+          { text: '집결·출발 — 명단 확인·안전 공지', tag: 'safety' },
+          { text: '관계 장치 (협동 미션·짝 대화)', tag: 'key' },
+          { text: '식사·교제', tag: null },
+          { text: '말씀·기도 (짧아도 분명하게)', tag: 'key' },
+          { text: '마무리 — 다음 주일 약속 1문장', tag: null },
+          { text: '귀가 확인 (누가 누구와 귀가하는지)', tag: 'safety' },
+        ]
+      },
+      {
+        title: '사후 — 기록 + 연결', color: '#185FA5',
+        items: [
+          { text: '사진·영상 카페 공유 (성도들 축복 받기)', tag: 'doc' },
+          { text: '최소 기준: 사진 10장 or 영상 30초 + 후기 3줄', tag: 'doc' },
+          { text: '4주 정착 루틴 연결 (반모임·출석·새친구)', tag: null },
+          { text: '다음 반별 여행 개선 1가지 기록', tag: null },
+        ]
+      }
+    ]
+  }
+];
+
+const state = {};
+const phaseOpen = {};
+let currentEvent = 0;
+
+function getKey(eid, pi, ci) { return eid + '_' + pi + '_' + ci; }
+
+function calcProgress(ev) {
+  let total = 0, checked = 0;
+  ev.phases.forEach((p, pi) => {
+    p.items.forEach((_, ci) => {
+      total++;
+      if (state[getKey(ev.id, pi, ci)]) checked++;
+    });
+  });
+  return total ? Math.round(checked / total * 100) : 0;
+}
+
+function renderTabs() {
+  const container = document.getElementById('event-tabs');
+  container.innerHTML = events.map((ev, i) => {
+    const pct = calcProgress(ev);
+    return `<div class="event-tab ${i === currentEvent ? 'active' : ''}" onclick="setEvent(${i})" style="${i === currentEvent ? 'border-bottom-color:' + ev.color + ';color:' + ev.color : ''}">
+      ${ev.name} ${pct > 0 ? '<span style="font-size:10px;opacity:.7">(' + pct + '%)</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderContent() {
+  const ev = events[currentEvent];
+  const pct = calcProgress(ev);
+  const container = document.getElementById('main-content');
+
+  const phasesHTML = ev.phases.map((phase, pi) => {
+    const phaseKey = ev.id + '_' + pi;
+    const isOpen = phaseOpen[phaseKey] !== false;
+    const checked = phase.items.filter((_, ci) => state[getKey(ev.id, pi, ci)]).length;
+    const allDone = checked === phase.items.length;
+
+    return `<div class="phase-card">
+      <div class="phase-head" onclick="togglePhase('${phaseKey}')">
+        <div class="phase-left">
+          <div class="phase-dot" style="background:${phase.color}"></div>
+          <div>
+            <div class="phase-title">${phase.title}</div>
+          </div>
+        </div>
+        <div class="phase-right">
+          <span class="phase-badge ${allDone ? 'done' : ''}">${checked} / ${phase.items.length}</span>
+          <span class="chevron ${isOpen ? 'open' : ''}">▶</span>
+        </div>
+      </div>
+      <div class="phase-body ${isOpen ? 'open' : ''}">
+        ${phase.items.map((item, ci) => {
+          const key = getKey(ev.id, pi, ci);
+          const tagHTML = item.tag === 'safety' ? '<span class="tag tag-safety">안전</span>' :
+                          item.tag === 'doc' ? '<span class="tag tag-doc">문서</span>' :
+                          item.tag === 'key' ? '<span class="tag tag-key">핵심</span>' : '';
+          return `<div class="check-row" onclick="toggleCheck('${key}')">
+            <div class="check-box ${state[key] ? 'checked' : ''}">
+              <svg class="check-mark" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <polyline points="1.5,5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="check-text ${state[key] ? 'done' : ''}">${item.text}</span>
+            ${tagHTML}
+          </div>`;
+        }).join('')}
+        <div class="memo-box">
+          <textarea class="memo-input" placeholder="이 단계 메모·결정 사항" rows="1" onclick="event.stopPropagation()"></textarea>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="event-header">
+      <div class="event-title" style="color:${ev.color}">${ev.name}</div>
+      <div class="event-desc">${ev.desc}</div>
+      <div class="event-meta">
+        <div class="meta-card"><div class="meta-label">행사 날짜</div><input class="meta-input" placeholder="날짜 입력"></div>
+        <div class="meta-card"><div class="meta-label">장소</div><input class="meta-input" placeholder="장소 입력"></div>
+        <div class="meta-card"><div class="meta-label">총괄 담당</div><input class="meta-input" placeholder="이름 입력"></div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-row">
+        <span class="progress-label">전체 진행률</span>
+        <span class="progress-pct" style="color:${ev.color}">${pct}%</span>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;background:${ev.color}"></div></div>
+    </div>
+    ${phasesHTML}
+    <div class="review-box">
+      <div class="review-title">행사 후 회고</div>
+      <div class="review-grid">
+        <div class="review-field">
+          <div class="review-label">참석 인원</div>
+          <input class="review-input" placeholder="___명">
+        </div>
+        <div class="review-field">
+          <div class="review-label">성공 기준 달성 여부</div>
+          <input class="review-input" placeholder="예) 새친구 5명 / 장결 0명">
+        </div>
+        <div class="review-field">
+          <div class="review-label">잘 된 것 2가지</div>
+          <input class="review-input" placeholder="1) 2)">
+        </div>
+        <div class="review-field">
+          <div class="review-label">아쉬운 것 2가지</div>
+          <input class="review-input" placeholder="1) 2)">
+        </div>
+      </div>
+      <div class="review-field" style="margin-top:10px;">
+        <div class="review-label">내년에 바꿀 것 1가지</div>
+        <input class="review-input" placeholder="다음 해 복제 시 수정할 내용">
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-danger" onclick="resetEvent('${ev.id}')">이 행사 초기화</button>
+    </div>
+  `;
+}
+
+function setEvent(i) {
+  currentEvent = i;
+  renderTabs();
+  renderContent();
+}
+
+function togglePhase(key) {
+  phaseOpen[key] = phaseOpen[key] === false ? true : false;
+  renderContent();
+}
+
+function toggleCheck(key) {
+  state[key] = !state[key];
+  localStorage.setItem('event_state', JSON.stringify(state));
+  renderTabs();
+  renderContent();
+}
+
+function resetEvent(eid) {
+  if (!confirm('이 행사 체크리스트를 초기화할까요?')) return;
+  Object.keys(state).filter(k => k.startsWith(eid)).forEach(k => delete state[k]);
+  localStorage.setItem('event_state', JSON.stringify(state));
+  renderTabs();
+  renderContent();
+}
+
+const saved = localStorage.getItem('event_state');
+if (saved) Object.assign(state, JSON.parse(saved));
+
+renderTabs();
+renderContent();
+</script>
+</body>
+</html>
